@@ -5,7 +5,8 @@ import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 
 interface AmbientSoundControlProps {
-  soundUrl: string;
+  // soundUrl can be either a plain URL string, or an object returned by getThemeSound: { proxyUrl, fallback }
+  soundUrl: string | { proxyUrl: string; fallback: string };
 }
 
 export const AmbientSoundControl = ({ soundUrl }: AmbientSoundControlProps) => {
@@ -14,6 +15,7 @@ export const AmbientSoundControl = ({ soundUrl }: AmbientSoundControlProps) => {
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [needsInteraction, setNeedsInteraction] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const currentVolume = volume[0];
 
   useEffect(() => {
     // Create audio element
@@ -24,27 +26,45 @@ export const AmbientSoundControl = ({ soundUrl }: AmbientSoundControlProps) => {
     }
 
     // Update source when soundUrl changes
-    if (audioRef.current.src !== soundUrl) {
-      const wasPlaying = isPlaying;
-      if (audioRef.current) {
-        audioRef.current.pause();
-      }
-      audioRef.current.src = soundUrl;
-      audioRef.current.load();
-      
-      if (wasPlaying) {
-        audioRef.current.play().catch(() => {
-          setIsPlaying(false);
-        });
-      }
-    }
+    let cancelled = false;
 
-    return () => {
+    const setSrc = (url?: string) => {
+      if (!url) return;
+      const wasPlaying = isPlaying;
+      if (audioRef.current) audioRef.current.pause();
       if (audioRef.current) {
-        audioRef.current.pause();
+        audioRef.current.src = url;
+        audioRef.current.load();
+      }
+      if (wasPlaying && audioRef.current) {
+        audioRef.current.play().catch(() => setIsPlaying(false));
       }
     };
-  }, [soundUrl]);
+
+    (async () => {
+      if (typeof soundUrl === "string") {
+        setSrc(soundUrl);
+        return;
+      }
+
+      try {
+        const resp = await fetch(soundUrl.proxyUrl);
+        if (!resp.ok) throw new Error("proxy fetch failed");
+        const json = await resp.json();
+        const preview =
+          (json.previews && json.previews[0]) || soundUrl.fallback;
+        if (!cancelled) setSrc(preview);
+      } catch (err) {
+        console.warn("Freesound proxy failed, using fallback", err);
+        if (!cancelled) setSrc(soundUrl.fallback);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      if (audioRef.current) audioRef.current.pause();
+    };
+  }, [soundUrl, isPlaying, currentVolume, volume]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -74,7 +94,7 @@ export const AmbientSoundControl = ({ soundUrl }: AmbientSoundControlProps) => {
 
   return (
     <div className="fixed bottom-6 right-6 z-50">
-      <div 
+      <div
         className="flex items-center gap-3 bg-white/40 backdrop-blur-md rounded-full px-4 py-3 shadow-[0_8px_32px_hsl(140_25%_55%/0.15)] border border-white/20 transition-all"
         onMouseEnter={() => setShowVolumeSlider(true)}
         onMouseLeave={() => setShowVolumeSlider(false)}
@@ -84,10 +104,10 @@ export const AmbientSoundControl = ({ soundUrl }: AmbientSoundControlProps) => {
           variant="ghost"
           onClick={togglePlay}
           className={`rounded-full transition-all ${
-            isPlaying 
-              ? "bg-primary/20 text-primary hover:bg-primary/30" 
-              : needsInteraction 
-              ? "bg-secondary/20 text-secondary hover:bg-secondary/30 animate-pulse" 
+            isPlaying
+              ? "bg-primary/20 text-primary hover:bg-primary/30"
+              : needsInteraction
+              ? "bg-secondary/20 text-secondary hover:bg-secondary/30 animate-pulse"
               : "hover:bg-primary/20"
           }`}
         >
@@ -99,7 +119,7 @@ export const AmbientSoundControl = ({ soundUrl }: AmbientSoundControlProps) => {
             <VolumeX className="w-5 h-5" />
           )}
         </Button>
-        
+
         {(showVolumeSlider || isPlaying) && isPlaying && (
           <div className="w-24 animate-fade-in">
             <Slider
@@ -112,7 +132,7 @@ export const AmbientSoundControl = ({ soundUrl }: AmbientSoundControlProps) => {
           </div>
         )}
       </div>
-      
+
       {needsInteraction && !isPlaying && (
         <div className="absolute bottom-full right-0 mb-2 bg-white/95 backdrop-blur-md rounded-2xl px-4 py-2 shadow-lg text-sm text-foreground whitespace-nowrap animate-fade-in border border-primary/20">
           Click to start ambient sounds 🎵
