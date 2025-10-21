@@ -84,6 +84,7 @@ const Index = () => {
   // Determine day/night mode based on time
   useEffect(() => {
     const hour = currentTime.getHours();
+    // Switch to night at 6 PM (18:00), back to day at 6 AM (6:00)
     setTimeMode(hour >= 6 && hour < 18 ? "day" : "night");
   }, [currentTime]);
 
