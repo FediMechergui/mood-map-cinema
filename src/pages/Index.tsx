@@ -208,21 +208,33 @@ const Index = () => {
         );
         const data = await res.json();
         if (data && data.Search) {
+          type OmdbSearchItem = {
+            Title?: string;
+            Year?: string;
+            Poster?: string;
+            imdbRating?: string;
+            Type?: string;
+            Plot?: string;
+          };
+
           setter(
-            data.Search.map((m: any) => ({
-              Title: m.Title,
-              Year: m.Year,
-              Poster: m.Poster,
-              imdbRating: m.imdbRating || "N/A",
-              Genre: m.Type || "",
-              Plot: m.Plot || "",
+            data.Search.map((m: OmdbSearchItem) => ({
+              Title: m.Title ?? "",
+              Year: m.Year ?? "",
+              Poster: m.Poster ?? "",
+              imdbRating: m.imdbRating ?? "N/A",
+              Genre: m.Type ?? "",
+              Plot: m.Plot ?? "",
             }))
           );
         } else {
           setter([]);
         }
       } catch (e) {
-        if ((e as any).name !== "AbortError") console.error(e);
+        // Handle aborted fetches without using `any` by checking DOMException
+        if (!(e instanceof DOMException && e.name === "AbortError")) {
+          console.error(e);
+        }
         setter([]);
       } finally {
         setSuggestionsLoading(false);

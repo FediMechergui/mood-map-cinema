@@ -105,24 +105,24 @@ export const getThemeStyles = (theme: ThemeType, timeMode: TimeMode) => {
 };
 
 export const getThemeSound = (theme: ThemeType, timeMode: TimeMode = "day") => {
-  // Ambient sounds for each theme and time of day (day/night)
-  // Using Pixabay free audio
+  // Ambient sounds for each theme and time of day
+  // Using direct-access free audio URLs
   const sounds: Record<ThemeType, Record<TimeMode, string>> = {
     forest: {
-      day: "https://cdn.pixabay.com/audio/2022/03/10/audio_4f88cebf07.mp3", // Forest daytime
-      night: "https://cdn.pixabay.com/audio/2023/06/12/audio_b5e9c8f1c4.mp3", // Forest night (crickets/night sounds)
+      day: "https://www.soundjay.com/forest-ambient.mp3", // Forest daytime ambience
+      night: "https://www.soundjay.com/crickets.mp3", // Night crickets
     },
     beach: {
-      day: "https://cdn.pixabay.com/audio/2022/05/13/audio_4d188e1cb3.mp3", // Ocean waves day
-      night: "https://cdn.pixabay.com/audio/2023/07/15/audio_a3d2e5f9b1.mp3", // Ocean waves night
+      day: "https://www.soundjay.com/waves.mp3", // Ocean waves
+      night: "https://www.soundjay.com/ocean-waves-night.mp3", // Ocean night waves
     },
     ruins: {
-      day: "https://cdn.pixabay.com/audio/2022/10/26/audio_24f0e7c40c.mp3", // Wind in ruins day
-      night: "https://cdn.pixabay.com/audio/2023/08/22/audio_7c1f3e8b5a.mp3", // Wind in ruins night (eerie)
+      day: "https://www.soundjay.com/wind-blowing.mp3", // Wind ambience
+      night: "https://www.soundjay.com/wind-howling.mp3", // Wind howling
     },
     city: {
-      day: "https://cdn.pixabay.com/audio/2023/08/14/audio_0c0b364d4e.mp3", // City daytime traffic
-      night: "https://cdn.pixabay.com/audio/2023/09/18/audio_2d5f8a1c6e.mp3", // City night (quieter, ambient)
+      day: "https://www.soundjay.com/city-ambience.mp3", // City daytime traffic
+      night: "https://www.soundjay.com/night-rain.mp3", // City night rain
     },
   };
 
