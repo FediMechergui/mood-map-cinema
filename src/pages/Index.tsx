@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { MovieCard } from "@/components/MovieCard";
 import { AmbientSoundControl } from "@/components/AmbientSoundControl";
 import { FloatingLeaves } from "@/components/FloatingLeaves";
+import { ThemeSelector, getThemeStyles, getThemeSound, ThemeType, TimeMode } from "@/components/ThemeSelector";
 import { Loader2, MapPin, CloudRain, Clock, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import logo from "@/assets/logo.png";
@@ -41,6 +42,8 @@ const Index = () => {
   const [location, setLocation] = useState<LocationData | null>(null);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [backgroundTheme, setBackgroundTheme] = useState<ThemeType>("forest");
+  const [timeMode, setTimeMode] = useState<TimeMode>("day");
 
   const moods = ["Happy", "Sad", "Adventurous", "Romantic", "Thoughtful", "Energetic", "Relaxed"];
   const genreOptions = [
@@ -54,25 +57,47 @@ const Index = () => {
     return () => clearInterval(timer);
   }, []);
 
+  // Determine day/night mode based on time
+  useEffect(() => {
+    const hour = currentTime.getHours();
+    setTimeMode(hour >= 6 && hour < 18 ? "day" : "night");
+  }, [currentTime]);
+
   const fetchLocationAndWeather = async () => {
     try {
-      const locationRes = await fetch("https://ipapi.co/json/");
-      const locationData = await locationRes.json();
-      setLocation({ city: locationData.city, country: locationData.country_name });
-
-      const weatherRes = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=${locationData.city}&appid=YOUR_OPENWEATHERMAP_KEY&units=metric`
-      );
+      // Using ipapi.co with better error handling
+      const locationRes = await fetch("https://ipapi.co/json/", {
+        method: "GET",
+      });
       
-      if (weatherRes.ok) {
-        const weatherData = await weatherRes.json();
-        setWeather({
-          description: weatherData.weather[0].description,
-          temp: Math.round(weatherData.main.temp),
-        });
+      if (locationRes.ok) {
+        const locationData = await locationRes.json();
+        if (locationData.city && locationData.country_name) {
+          setLocation({ city: locationData.city, country: locationData.country_name });
+          
+          // Try to fetch weather data (requires API key)
+          // Note: Users need to sign up at openweathermap.org for a free API key
+          try {
+            const weatherRes = await fetch(
+              `https://api.openweathermap.org/data/2.5/weather?q=${locationData.city}&appid=YOUR_OPENWEATHERMAP_KEY&units=metric`
+            );
+            
+            if (weatherRes.ok) {
+              const weatherData = await weatherRes.json();
+              setWeather({
+                description: weatherData.weather[0].description,
+                temp: Math.round(weatherData.main.temp),
+              });
+            }
+          } catch (weatherError) {
+            console.log("Weather data unavailable - API key needed");
+          }
+        }
       }
     } catch (error) {
-      console.error("Error fetching location/weather:", error);
+      console.log("Location detection unavailable");
+      // Set a default location for demo purposes
+      setLocation({ city: "Your Location", country: "Earth" });
     }
   };
 
@@ -160,10 +185,29 @@ const Index = () => {
     return "Evening";
   };
 
+  const themeStyles = getThemeStyles(backgroundTheme, timeMode);
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-primary/5 relative overflow-hidden">
+    <div 
+      className="min-h-screen relative overflow-hidden transition-all duration-1000"
+      style={{
+        background: themeStyles.background,
+      }}
+    >
+      <div 
+        className="absolute inset-0 pointer-events-none transition-opacity duration-1000"
+        style={{
+          background: themeStyles.overlay,
+        }}
+      />
+      
       <FloatingLeaves />
-      <AmbientSoundControl />
+      <ThemeSelector 
+        currentTheme={backgroundTheme} 
+        onThemeChange={setBackgroundTheme}
+        timeMode={timeMode}
+      />
+      <AmbientSoundControl soundUrl={getThemeSound(backgroundTheme)} />
       
       <div className="container mx-auto px-4 py-8 relative z-10">
         {/* Header */}
@@ -177,24 +221,26 @@ const Index = () => {
           </p>
         </header>
 
-        {/* Context Info */}
-        <div className="flex flex-wrap justify-center gap-4 mb-12 animate-fade-in">
-          {location && (
-            <div className="flex items-center gap-2 bg-white/40 backdrop-blur-md rounded-full px-5 py-2 shadow-sm border border-white/20">
-              <MapPin className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium">{location.city}, {location.country}</span>
-            </div>
-          )}
-          {weather && (
-            <div className="flex items-center gap-2 bg-white/40 backdrop-blur-md rounded-full px-5 py-2 shadow-sm border border-white/20">
-              <CloudRain className="w-4 h-4 text-accent" />
-              <span className="text-sm font-medium">{weather.temp}°C • {weather.description}</span>
-            </div>
-          )}
-          <div className="flex items-center gap-2 bg-white/40 backdrop-blur-md rounded-full px-5 py-2 shadow-sm border border-white/20">
+        {/* Context Info - Positioned below header */}
+        <div className="flex flex-wrap justify-center gap-3 mb-12 animate-fade-in">
+          <div className="flex items-center gap-2 bg-white/50 backdrop-blur-md rounded-full px-5 py-2.5 shadow-md border border-white/30">
             <Clock className="w-4 h-4 text-secondary" />
-            <span className="text-sm font-medium">{getTimeOfDay()} • {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+            <span className="text-sm font-semibold">{getTimeOfDay()} • {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
           </div>
+          
+          {location && (
+            <div className="flex items-center gap-2 bg-white/50 backdrop-blur-md rounded-full px-5 py-2.5 shadow-md border border-white/30">
+              <MapPin className="w-4 h-4 text-primary" />
+              <span className="text-sm font-semibold">{location.city}, {location.country}</span>
+            </div>
+          )}
+          
+          {weather && (
+            <div className="flex items-center gap-2 bg-white/50 backdrop-blur-md rounded-full px-5 py-2.5 shadow-md border border-white/30">
+              <CloudRain className="w-4 h-4 text-accent" />
+              <span className="text-sm font-semibold">{weather.temp}°C • {weather.description}</span>
+            </div>
+          )}
         </div>
 
         {/* Input Form */}
