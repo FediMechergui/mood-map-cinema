@@ -91,27 +91,12 @@ const Index = () => {
     // Set Tunisia as default location
     setLocation({ city: "Tunis", country: "Tunisia" });
 
-    // Fetch weather for Tunis, Tunisia
-    try {
-      const weatherRes = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?q=Tunis,TN&appid=YOUR_OPENWEATHERMAP_KEY&units=metric`
-      );
-
-      if (weatherRes.ok) {
-        const weatherData = await weatherRes.json();
-        setWeather({
-          description: weatherData.weather[0].description,
-          temp: Math.round(weatherData.main.temp),
-        });
-      }
-    } catch (weatherError) {
-      console.log("Weather data unavailable - API key needed");
-      // Set demo weather data for Tunisia
-      setWeather({
-        description: "clear sky",
-        temp: 22,
-      });
-    }
+    // Use demo weather data (no API key needed)
+    // In production, you can add your OpenWeatherMap API key here
+    setWeather({
+      description: "clear sky",
+      temp: 24,
+    });
   };
 
   const toggleGenre = (genre: string) => {
