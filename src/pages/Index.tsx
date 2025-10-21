@@ -1,11 +1,336 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+import { MovieCard } from "@/components/MovieCard";
+import { AmbientSoundControl } from "@/components/AmbientSoundControl";
+import { FloatingLeaves } from "@/components/FloatingLeaves";
+import { Loader2, MapPin, CloudRain, Clock, Sparkles } from "lucide-react";
+import { toast } from "sonner";
+import logo from "@/assets/logo.png";
+
+interface Movie {
+  Title: string;
+  Year: string;
+  Poster: string;
+  imdbRating: string;
+  Genre: string;
+  Plot: string;
+}
+
+interface LocationData {
+  city: string;
+  country: string;
+}
+
+interface WeatherData {
+  description: string;
+  temp: number;
+}
 
 const Index = () => {
+  const [mood, setMood] = useState("");
+  const [genres, setGenres] = useState<string[]>([]);
+  const [lastWatched, setLastWatched] = useState("");
+  const [favorite, setFavorite] = useState("");
+  const [vibe, setVibe] = useState("");
+  const [movies, setMovies] = useState<Movie[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [location, setLocation] = useState<LocationData | null>(null);
+  const [weather, setWeather] = useState<WeatherData | null>(null);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  const moods = ["Happy", "Sad", "Adventurous", "Romantic", "Thoughtful", "Energetic", "Relaxed"];
+  const genreOptions = [
+    "Action", "Comedy", "Drama", "Romance", "Thriller", 
+    "Sci-Fi", "Horror", "Documentary", "Animation", "Fantasy"
+  ];
+
+  useEffect(() => {
+    fetchLocationAndWeather();
+    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const fetchLocationAndWeather = async () => {
+    try {
+      const locationRes = await fetch("https://ipapi.co/json/");
+      const locationData = await locationRes.json();
+      setLocation({ city: locationData.city, country: locationData.country_name });
+
+      const weatherRes = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?q=${locationData.city}&appid=YOUR_OPENWEATHERMAP_KEY&units=metric`
+      );
+      
+      if (weatherRes.ok) {
+        const weatherData = await weatherRes.json();
+        setWeather({
+          description: weatherData.weather[0].description,
+          temp: Math.round(weatherData.main.temp),
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching location/weather:", error);
+    }
+  };
+
+  const toggleGenre = (genre: string) => {
+    setGenres(prev =>
+      prev.includes(genre) ? prev.filter(g => g !== genre) : [...prev, genre]
+    );
+  };
+
+  const getRecommendations = async () => {
+    if (!mood || genres.length === 0) {
+      toast.error("Please select your mood and at least one genre!");
+      return;
+    }
+
+    setLoading(true);
+    setMovies([]);
+
+    try {
+      // Movie search terms based on mood and context
+      const searchTerms = getMoodBasedSearchTerms(mood, genres, weather?.description);
+      const moviePromises = searchTerms.map(term =>
+        fetch(`https://www.omdbapi.com/?apikey=dafdd708&s=${term}&type=movie`)
+          .then(res => res.json())
+          .then(data => data.Search || [])
+      );
+
+      const allResults = await Promise.all(moviePromises);
+      const flatResults = allResults.flat();
+      
+      // Get detailed info for random selection
+      const selectedMovies = flatResults
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 8);
+
+      const detailedPromises = selectedMovies.map(movie =>
+        fetch(`https://www.omdbapi.com/?apikey=dafdd708&i=${movie.imdbID}&plot=short`)
+          .then(res => res.json())
+      );
+
+      const detailedMovies = await Promise.all(detailedPromises);
+      setMovies(detailedMovies.filter(m => m.Response === "True"));
+      
+      toast.success(`Found ${detailedMovies.length} perfect movies for your mood!`);
+    } catch (error) {
+      toast.error("Something went wrong. Please try again!");
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getMoodBasedSearchTerms = (mood: string, genres: string[], weather?: string) => {
+    const moodKeywords: Record<string, string[]> = {
+      Happy: ["comedy", "adventure", "musical", "feel-good"],
+      Sad: ["drama", "emotional", "meaningful", "touching"],
+      Adventurous: ["adventure", "action", "exploration", "journey"],
+      Romantic: ["romance", "love", "relationship", "romantic"],
+      Thoughtful: ["drama", "philosophical", "mystery", "indie"],
+      Energetic: ["action", "thriller", "fast-paced", "exciting"],
+      Relaxed: ["calm", "peaceful", "slow-burn", "contemplative"],
+    };
+
+    const weatherKeywords: Record<string, string> = {
+      rain: "cozy",
+      clear: "adventure",
+      clouds: "mystery",
+      snow: "winter",
+    };
+
+    const baseTerms = [...(moodKeywords[mood] || []), ...genres.slice(0, 2)];
+    
+    if (weather) {
+      const weatherTerm = Object.keys(weatherKeywords).find(key => weather.includes(key));
+      if (weatherTerm) baseTerms.push(weatherKeywords[weatherTerm]);
+    }
+
+    return baseTerms.slice(0, 6);
+  };
+
+  const getTimeOfDay = () => {
+    const hour = currentTime.getHours();
+    if (hour < 12) return "Morning";
+    if (hour < 18) return "Afternoon";
+    return "Evening";
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
+    <div className="min-h-screen bg-gradient-to-b from-background to-primary/5 relative overflow-hidden">
+      <FloatingLeaves />
+      <AmbientSoundControl />
+      
+      <div className="container mx-auto px-4 py-8 relative z-10">
+        {/* Header */}
+        <header className="text-center mb-12 animate-fade-in">
+          <img src={logo} alt="Marwa's Mood Movies Cave" className="w-48 md:w-64 mx-auto mb-6" />
+          <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-4 tracking-tight">
+            Marwa's Mood Movies Cave
+          </h1>
+          <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            Discover your perfect movie match based on your mood, the weather, and your vibe
+          </p>
+        </header>
+
+        {/* Context Info */}
+        <div className="flex flex-wrap justify-center gap-4 mb-12 animate-fade-in">
+          {location && (
+            <div className="flex items-center gap-2 bg-white/40 backdrop-blur-md rounded-full px-5 py-2 shadow-sm border border-white/20">
+              <MapPin className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium">{location.city}, {location.country}</span>
+            </div>
+          )}
+          {weather && (
+            <div className="flex items-center gap-2 bg-white/40 backdrop-blur-md rounded-full px-5 py-2 shadow-sm border border-white/20">
+              <CloudRain className="w-4 h-4 text-accent" />
+              <span className="text-sm font-medium">{weather.temp}°C • {weather.description}</span>
+            </div>
+          )}
+          <div className="flex items-center gap-2 bg-white/40 backdrop-blur-md rounded-full px-5 py-2 shadow-sm border border-white/20">
+            <Clock className="w-4 h-4 text-secondary" />
+            <span className="text-sm font-medium">{getTimeOfDay()} • {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+          </div>
+        </div>
+
+        {/* Input Form */}
+        <div className="max-w-4xl mx-auto mb-16 bg-white/40 backdrop-blur-md rounded-3xl p-8 md:p-10 shadow-[0_8px_32px_hsl(140_25%_55%/0.15)] border border-white/20 animate-fade-in">
+          <div className="space-y-8">
+            {/* Mood */}
+            <div className="space-y-3">
+              <Label className="text-lg font-semibold text-foreground">How are you feeling?</Label>
+              <Select value={mood} onValueChange={setMood}>
+                <SelectTrigger className="rounded-2xl border-primary/20 bg-white/60 h-12">
+                  <SelectValue placeholder="Select your mood" />
+                </SelectTrigger>
+                <SelectContent className="rounded-2xl bg-white/95 backdrop-blur-md">
+                  {moods.map(m => (
+                    <SelectItem key={m} value={m} className="rounded-xl">{m}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Genres */}
+            <div className="space-y-3">
+              <Label className="text-lg font-semibold text-foreground">What genres are calling to you?</Label>
+              <div className="flex flex-wrap gap-3">
+                {genreOptions.map(genre => (
+                  <label
+                    key={genre}
+                    className="flex items-center gap-2 bg-white/60 rounded-full px-4 py-2 cursor-pointer hover:bg-primary/10 transition-colors border border-transparent hover:border-primary/20"
+                  >
+                    <Checkbox
+                      checked={genres.includes(genre)}
+                      onCheckedChange={() => toggleGenre(genre)}
+                      className="rounded-md"
+                    />
+                    <span className="text-sm font-medium">{genre}</span>
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            {/* Last Watched */}
+            <div className="space-y-3">
+              <Label htmlFor="lastWatched" className="text-lg font-semibold text-foreground">
+                Last movie you watched
+              </Label>
+              <Input
+                id="lastWatched"
+                value={lastWatched}
+                onChange={(e) => setLastWatched(e.target.value)}
+                placeholder="e.g., Inception, The Shawshank Redemption..."
+                className="rounded-2xl border-primary/20 bg-white/60 h-12"
+              />
+            </div>
+
+            {/* Favorite */}
+            <div className="space-y-3">
+              <Label htmlFor="favorite" className="text-lg font-semibold text-foreground">
+                Your all-time favorite movie
+              </Label>
+              <Input
+                id="favorite"
+                value={favorite}
+                onChange={(e) => setFavorite(e.target.value)}
+                placeholder="e.g., Forrest Gump, The Godfather..."
+                className="rounded-2xl border-primary/20 bg-white/60 h-12"
+              />
+            </div>
+
+            {/* Vibe */}
+            <div className="space-y-3">
+              <Label htmlFor="vibe" className="text-lg font-semibold text-foreground">
+                I want something that feels like...
+              </Label>
+              <Input
+                id="vibe"
+                value={vibe}
+                onChange={(e) => setVibe(e.target.value)}
+                placeholder="e.g., a warm hug, an adrenaline rush, a deep conversation..."
+                className="rounded-2xl border-primary/20 bg-white/60 h-12"
+              />
+            </div>
+
+            {/* Submit Button */}
+            <Button
+              onClick={getRecommendations}
+              disabled={loading}
+              className="w-full h-14 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-lg shadow-[0_8px_20px_hsl(140_25%_55%/0.3)] hover:shadow-[0_12px_28px_hsl(140_25%_55%/0.4)] transition-all"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                  Finding your perfect movies...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-5 h-5 mr-2" />
+                  Discover Movies
+                </>
+              )}
+            </Button>
+          </div>
+        </div>
+
+        {/* Movie Results */}
+        {movies.length > 0 && (
+          <div className="max-w-7xl mx-auto animate-fade-in">
+            <h2 className="text-3xl font-bold text-center mb-8 text-foreground">
+              Your Personalized Recommendations
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {movies.map((movie, index) => (
+                <div
+                  key={`${movie.Title}-${index}`}
+                  style={{ animationDelay: `${index * 100}ms` }}
+                  className="animate-fade-in"
+                >
+                  <MovieCard
+                    title={movie.Title}
+                    year={movie.Year}
+                    poster={movie.Poster}
+                    rating={movie.imdbRating}
+                    genre={movie.Genre}
+                    plot={movie.Plot}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Footer */}
+        <footer className="text-center mt-20 pb-8">
+          <p className="text-muted-foreground">
+            Made with <span className="text-destructive">❤️</span> for Marwa
+          </p>
+        </footer>
       </div>
     </div>
   );
