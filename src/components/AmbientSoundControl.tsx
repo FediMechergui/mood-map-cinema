@@ -24,16 +24,22 @@ export const AmbientSoundControl = ({ soundUrl }: AmbientSoundControlProps) => {
     }
 
     // Update source when soundUrl changes
-    if (audioRef.current.src !== soundUrl) {
+    const currentSrc = audioRef.current.src;
+    const newSrc = soundUrl.startsWith("http")
+      ? soundUrl
+      : new URL(soundUrl, window.location.origin).href;
+
+    if (currentSrc !== newSrc) {
       const wasPlaying = isPlaying;
       if (audioRef.current) {
         audioRef.current.pause();
       }
-      audioRef.current.src = soundUrl;
+      audioRef.current.src = newSrc;
       audioRef.current.load();
 
       if (wasPlaying) {
-        audioRef.current.play().catch(() => {
+        audioRef.current.play().catch((err) => {
+          console.error("Auto-play failed:", err);
           setIsPlaying(false);
         });
       }
@@ -44,7 +50,8 @@ export const AmbientSoundControl = ({ soundUrl }: AmbientSoundControlProps) => {
         audioRef.current.pause();
       }
     };
-  }, [soundUrl, isPlaying, volume]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [soundUrl]);
 
   useEffect(() => {
     if (audioRef.current) {
@@ -53,21 +60,46 @@ export const AmbientSoundControl = ({ soundUrl }: AmbientSoundControlProps) => {
   }, [volume]);
 
   const togglePlay = async () => {
-    if (!audioRef.current) return;
+    if (!audioRef.current) {
+      console.error("Audio ref is null");
+      return;
+    }
+
+    console.log("Toggle play clicked. Current state:", {
+      isPlaying,
+      src: audioRef.current.src,
+      readyState: audioRef.current.readyState,
+    });
 
     try {
       if (isPlaying) {
         audioRef.current.pause();
         setIsPlaying(false);
+        console.log("Audio paused");
       } else {
+        // Ensure audio is loaded
+        if (audioRef.current.readyState < 2) {
+          console.log("Audio not ready, loading...");
+          audioRef.current.load();
+          await new Promise((resolve) => {
+            audioRef.current!.addEventListener("canplay", resolve, {
+              once: true,
+            });
+          });
+        }
+
+        console.log("Attempting to play audio...");
         await audioRef.current.play();
         setIsPlaying(true);
         setNeedsInteraction(false);
         toast.success("Ambient sounds playing", { duration: 2000 });
+        console.log("Audio playing successfully");
       }
     } catch (error) {
       console.error("Audio playback failed:", error);
-      toast.error("Click to enable ambient sounds", { duration: 3000 });
+      toast.error("Unable to play audio. Check browser console.", {
+        duration: 3000,
+      });
       setIsPlaying(false);
     }
   };
