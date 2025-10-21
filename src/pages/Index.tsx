@@ -315,7 +315,9 @@ const Index = () => {
         onThemeChange={setBackgroundTheme}
         timeMode={timeMode}
       />
-      <AmbientSoundControl soundUrl={getThemeSound(backgroundTheme)} />
+      <AmbientSoundControl
+        soundUrl={getThemeSound(backgroundTheme, timeMode)}
+      />
 
       <div className="container mx-auto px-4 py-8 relative z-10">
         {/* Header */}
