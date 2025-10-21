@@ -157,11 +157,26 @@ const Index = () => {
       );
 
       const detailedMovies = await Promise.all(detailedPromises);
-      setMovies(detailedMovies.filter((m) => m.Response === "True"));
 
-      toast.success(
-        `Found ${detailedMovies.length} perfect movies for your mood!`
+      // Filter movies with IMDB rating >= 7.0
+      const highRatedMovies = detailedMovies.filter(
+        (m) =>
+          m.Response === "True" &&
+          m.imdbRating &&
+          parseFloat(m.imdbRating) >= 7.0
       );
+
+      setMovies(highRatedMovies);
+
+      if (highRatedMovies.length === 0) {
+        toast.info(
+          "No movies found with rating 7.0 or higher. Try different preferences!"
+        );
+      } else {
+        toast.success(
+          `Found ${highRatedMovies.length} perfect movies (rating 7.0+) for your mood!`
+        );
+      }
     } catch (error) {
       toast.error("Something went wrong. Please try again!");
       console.error(error);
