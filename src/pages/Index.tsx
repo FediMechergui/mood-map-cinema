@@ -64,40 +64,29 @@ const Index = () => {
   }, [currentTime]);
 
   const fetchLocationAndWeather = async () => {
+    // Set Tunisia as default location
+    setLocation({ city: "Tunis", country: "Tunisia" });
+    
+    // Fetch weather for Tunis, Tunisia
     try {
-      // Using ipapi.co with better error handling
-      const locationRes = await fetch("https://ipapi.co/json/", {
-        method: "GET",
-      });
+      const weatherRes = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?q=Tunis,TN&appid=YOUR_OPENWEATHERMAP_KEY&units=metric`
+      );
       
-      if (locationRes.ok) {
-        const locationData = await locationRes.json();
-        if (locationData.city && locationData.country_name) {
-          setLocation({ city: locationData.city, country: locationData.country_name });
-          
-          // Try to fetch weather data (requires API key)
-          // Note: Users need to sign up at openweathermap.org for a free API key
-          try {
-            const weatherRes = await fetch(
-              `https://api.openweathermap.org/data/2.5/weather?q=${locationData.city}&appid=YOUR_OPENWEATHERMAP_KEY&units=metric`
-            );
-            
-            if (weatherRes.ok) {
-              const weatherData = await weatherRes.json();
-              setWeather({
-                description: weatherData.weather[0].description,
-                temp: Math.round(weatherData.main.temp),
-              });
-            }
-          } catch (weatherError) {
-            console.log("Weather data unavailable - API key needed");
-          }
-        }
+      if (weatherRes.ok) {
+        const weatherData = await weatherRes.json();
+        setWeather({
+          description: weatherData.weather[0].description,
+          temp: Math.round(weatherData.main.temp),
+        });
       }
-    } catch (error) {
-      console.log("Location detection unavailable");
-      // Set a default location for demo purposes
-      setLocation({ city: "Your Location", country: "Earth" });
+    } catch (weatherError) {
+      console.log("Weather data unavailable - API key needed");
+      // Set demo weather data for Tunisia
+      setWeather({
+        description: "clear sky",
+        temp: 22,
+      });
     }
   };
 
@@ -191,14 +180,14 @@ const Index = () => {
     <div 
       className="min-h-screen relative overflow-hidden transition-all duration-1000"
       style={{
-        background: themeStyles.background,
+        backgroundImage: `url(${themeStyles.backgroundImage})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundAttachment: 'fixed',
       }}
     >
       <div 
-        className="absolute inset-0 pointer-events-none transition-opacity duration-1000"
-        style={{
-          background: themeStyles.overlay,
-        }}
+        className="absolute inset-0 pointer-events-none transition-opacity duration-1000 bg-black/20"
       />
       
       <FloatingLeaves />

@@ -2,6 +2,14 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Palmtree, Trees, Castle, Building2, Sun, Moon } from "lucide-react";
 import { Card } from "@/components/ui/card";
+import forestDay from "@/assets/forest-day.jpg";
+import forestNight from "@/assets/forest-night.jpg";
+import beachDay from "@/assets/beach-day.jpg";
+import beachNight from "@/assets/beach-night.jpg";
+import ruinsDay from "@/assets/ruins-day.jpg";
+import ruinsNight from "@/assets/ruins-night.jpg";
+import cityDay from "@/assets/city-day.jpg";
+import cityNight from "@/assets/city-night.jpg";
 
 export type ThemeType = "forest" | "beach" | "ruins" | "city";
 export type TimeMode = "day" | "night";
@@ -61,42 +69,34 @@ export const getThemeStyles = (theme: ThemeType, timeMode: TimeMode) => {
   const themes = {
     forest: {
       day: {
-        background: "linear-gradient(135deg, hsl(140 35% 85%) 0%, hsl(140 30% 75%) 50%, hsl(140 25% 65%) 100%)",
-        overlay: "radial-gradient(circle at 30% 20%, hsl(140 40% 50% / 0.1) 0%, transparent 50%)",
+        backgroundImage: forestDay,
       },
       night: {
-        background: "linear-gradient(135deg, hsl(140 20% 15%) 0%, hsl(140 25% 12%) 50%, hsl(140 30% 8%) 100%)",
-        overlay: "radial-gradient(circle at 70% 30%, hsl(195 40% 30% / 0.2) 0%, transparent 50%)",
+        backgroundImage: forestNight,
       },
     },
     beach: {
       day: {
-        background: "linear-gradient(135deg, hsl(195 60% 85%) 0%, hsl(42 50% 80%) 50%, hsl(42 60% 90%) 100%)",
-        overlay: "radial-gradient(circle at 50% 100%, hsl(195 50% 70% / 0.3) 0%, transparent 60%)",
+        backgroundImage: beachDay,
       },
       night: {
-        background: "linear-gradient(135deg, hsl(220 40% 20%) 0%, hsl(220 35% 15%) 50%, hsl(220 30% 10%) 100%)",
-        overlay: "radial-gradient(circle at 50% 20%, hsl(220 50% 40% / 0.2) 0%, transparent 50%)",
+        backgroundImage: beachNight,
       },
     },
     ruins: {
       day: {
-        background: "linear-gradient(135deg, hsl(30 30% 75%) 0%, hsl(25 35% 65%) 50%, hsl(20 40% 60%) 100%)",
-        overlay: "radial-gradient(circle at 40% 60%, hsl(25 30% 50% / 0.15) 0%, transparent 60%)",
+        backgroundImage: ruinsDay,
       },
       night: {
-        background: "linear-gradient(135deg, hsl(30 20% 20%) 0%, hsl(25 25% 15%) 50%, hsl(20 30% 12%) 100%)",
-        overlay: "radial-gradient(circle at 60% 40%, hsl(280 30% 25% / 0.2) 0%, transparent 50%)",
+        backgroundImage: ruinsNight,
       },
     },
     city: {
       day: {
-        background: "linear-gradient(135deg, hsl(200 30% 80%) 0%, hsl(210 25% 70%) 50%, hsl(220 20% 65%) 100%)",
-        overlay: "radial-gradient(circle at 50% 50%, hsl(210 20% 60% / 0.15) 0%, transparent 70%)",
+        backgroundImage: cityDay,
       },
       night: {
-        background: "linear-gradient(135deg, hsl(220 30% 18%) 0%, hsl(230 35% 12%) 50%, hsl(240 40% 8%) 100%)",
-        overlay: "radial-gradient(circle at 50% 100%, hsl(280 50% 30% / 0.25) 0%, transparent 60%)",
+        backgroundImage: cityNight,
       },
     },
   };
