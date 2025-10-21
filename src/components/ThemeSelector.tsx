@@ -106,23 +106,23 @@ export const getThemeStyles = (theme: ThemeType, timeMode: TimeMode) => {
 
 export const getThemeSound = (theme: ThemeType, timeMode: TimeMode = "day") => {
   // Ambient sounds for each theme and time of day
-  // Using verified working audio URLs from reliable sources
+  // Using verified working audio URLs from Mixkit
   const sounds: Record<ThemeType, Record<TimeMode, string>> = {
     forest: {
-      day: "https://cdn.pixabay.com/download/audio/2022/03/10/audio_1ac5d4c9f1.mp3", // Forest birds and ambience
-      night: "https://cdn.pixabay.com/download/audio/2022/05/09/audio_4e8e6faf87.mp3", // Night forest with crickets
+      day: "https://assets.mixkit.co/active_storage/sfx/2459/2459.wav", // Forest birds & ambience
+      night: "https://assets.mixkit.co/active_storage/sfx/2460/2460.wav", // Night forest with crickets
     },
     beach: {
-      day: "https://cdn.pixabay.com/download/audio/2022/03/07/audio_8bdcb53d08.mp3", // Gentle beach waves
-      night: "https://cdn.pixabay.com/download/audio/2023/07/06/audio_6c6fa88ba9.mp3", // Ocean waves at night
+      day: "https://assets.mixkit.co/active_storage/sfx/513/513.wav", // Gentle beach waves
+      night: "https://assets.mixkit.co/active_storage/sfx/512/512.wav", // Ocean waves at night
     },
     ruins: {
-      day: "https://cdn.pixabay.com/download/audio/2022/04/01/audio_eb5b1088f1.mp3", // Wind through ruins
-      night: "https://cdn.pixabay.com/download/audio/2023/02/13/audio_a3c3f1f977.mp3", // Mysterious wind at night
+      day: "https://assets.mixkit.co/active_storage/sfx/2516/2516.wav", // Wind through ruins
+      night: "https://assets.mixkit.co/active_storage/sfx/2523/2523.wav", // Mysterious wind at night
     },
     city: {
-      day: "https://cdn.pixabay.com/download/audio/2022/03/09/audio_0e3b26f626.mp3", // Busy city ambience
-      night: "https://cdn.pixabay.com/download/audio/2023/06/21/audio_85d4bb7236.mp3", // Peaceful city night rain
+      day: "https://assets.mixkit.co/active_storage/sfx/2489/2489.wav", // Busy city ambience
+      night: "https://assets.mixkit.co/active_storage/sfx/2467/2467.wav", // Peaceful city night rain
     },
   };
 
