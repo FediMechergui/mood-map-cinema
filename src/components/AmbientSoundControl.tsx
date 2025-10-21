@@ -5,8 +5,7 @@ import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 
 interface AmbientSoundControlProps {
-  // soundUrl can be either a plain URL string, or an object returned by getThemeSound: { proxyUrl, fallback }
-  soundUrl: string | { proxyUrl: string; fallback: string };
+  soundUrl: string;
 }
 
 export const AmbientSoundControl = ({ soundUrl }: AmbientSoundControlProps) => {
@@ -15,7 +14,6 @@ export const AmbientSoundControl = ({ soundUrl }: AmbientSoundControlProps) => {
   const [showVolumeSlider, setShowVolumeSlider] = useState(false);
   const [needsInteraction, setNeedsInteraction] = useState(true);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const currentVolume = volume[0];
 
   useEffect(() => {
     // Create audio element
@@ -26,45 +24,27 @@ export const AmbientSoundControl = ({ soundUrl }: AmbientSoundControlProps) => {
     }
 
     // Update source when soundUrl changes
-    let cancelled = false;
-
-    const setSrc = (url?: string) => {
-      if (!url) return;
+    if (audioRef.current.src !== soundUrl) {
       const wasPlaying = isPlaying;
-      if (audioRef.current) audioRef.current.pause();
       if (audioRef.current) {
-        audioRef.current.src = url;
-        audioRef.current.load();
+        audioRef.current.pause();
       }
-      if (wasPlaying && audioRef.current) {
-        audioRef.current.play().catch(() => setIsPlaying(false));
-      }
-    };
+      audioRef.current.src = soundUrl;
+      audioRef.current.load();
 
-    (async () => {
-      if (typeof soundUrl === "string") {
-        setSrc(soundUrl);
-        return;
+      if (wasPlaying) {
+        audioRef.current.play().catch(() => {
+          setIsPlaying(false);
+        });
       }
-
-      try {
-        const resp = await fetch(soundUrl.proxyUrl);
-        if (!resp.ok) throw new Error("proxy fetch failed");
-        const json = await resp.json();
-        const preview =
-          (json.previews && json.previews[0]) || soundUrl.fallback;
-        if (!cancelled) setSrc(preview);
-      } catch (err) {
-        console.warn("Freesound proxy failed, using fallback", err);
-        if (!cancelled) setSrc(soundUrl.fallback);
-      }
-    })();
+    }
 
     return () => {
-      cancelled = true;
-      if (audioRef.current) audioRef.current.pause();
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
     };
-  }, [soundUrl, isPlaying, currentVolume, volume]);
+  }, [soundUrl, isPlaying, volume]);
 
   useEffect(() => {
     if (audioRef.current) {

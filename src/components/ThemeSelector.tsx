@@ -105,19 +105,14 @@ export const getThemeStyles = (theme: ThemeType, timeMode: TimeMode) => {
 };
 
 export const getThemeSound = (theme: ThemeType) => {
-  // Attempt to fetch previews from our serverless Freesound proxy.
-  // The endpoint will return { previews: string[] } or an error.
-  // We return the proxy URL which the AmbientSoundControl can fetch and play.
-  const proxyUrl = `/api/freesound?theme=${encodeURIComponent(theme)}`;
-
-  // We'll return the proxy url — callers should fetch it and handle fallbacks.
-  // For convenience, provide default fallbacks inline as well.
-  const fallbacks: Record<ThemeType, string> = {
+  // Static fallback sounds (Pixabay free audio)
+  const sounds: Record<ThemeType, string> = {
     forest: "https://cdn.pixabay.com/audio/2022/03/10/audio_4f88cebf07.mp3",
     beach: "https://cdn.pixabay.com/audio/2022/05/13/audio_4d188e1cb3.mp3",
     ruins: "https://cdn.pixabay.com/audio/2022/10/26/audio_24f0e7c40c.mp3",
     city: "https://cdn.pixabay.com/audio/2023/08/14/audio_0c0b364d4e.mp3",
   };
 
-  return { proxyUrl, fallback: fallbacks[theme] };
+  // Return static URL for now (Freesound proxy can be enabled later when deployed)
+  return sounds[theme];
 };
