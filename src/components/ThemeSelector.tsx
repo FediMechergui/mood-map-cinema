@@ -28,40 +28,44 @@ const themes = [
 ];
 
 export const ThemeSelector = ({ currentTheme, onThemeChange, timeMode }: ThemeSelectorProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <Card className="fixed top-6 right-6 z-50 bg-white/40 backdrop-blur-md rounded-3xl p-4 shadow-[0_8px_32px_hsl(140_25%_55%/0.15)] border border-white/20">
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-center gap-2 pb-2 border-b border-primary/10">
-          {timeMode === "day" ? (
-            <Sun className="w-5 h-5 text-secondary" />
-          ) : (
-            <Moon className="w-5 h-5 text-accent" />
-          )}
-          <span className="text-sm font-semibold text-foreground">
-            {timeMode === "day" ? "Daytime" : "Nighttime"}
-          </span>
-        </div>
-        
-        <div className="flex flex-col gap-2">
-          <span className="text-xs text-muted-foreground font-medium text-center">Choose Mood</span>
-          {themes.map(({ value, label, icon: Icon }) => (
-            <Button
-              key={value}
-              onClick={() => onThemeChange(value)}
-              variant={currentTheme === value ? "default" : "ghost"}
-              className={`rounded-2xl justify-start gap-2 transition-all ${
-                currentTheme === value
-                  ? "bg-primary text-primary-foreground shadow-md"
-                  : "hover:bg-primary/10 text-foreground"
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              <span className="text-sm font-medium">{label}</span>
-            </Button>
-          ))}
-        </div>
-      </div>
-    </Card>
+    <div className="fixed top-4 right-4 z-50">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="bg-white/30 backdrop-blur-md rounded-full p-3 shadow-lg border border-white/30 hover:bg-white/40 transition-all duration-300 hover:scale-105"
+      >
+        {currentTheme === "forest" && <Trees className="w-5 h-5 text-primary" />}
+        {currentTheme === "beach" && <Palmtree className="w-5 h-5 text-primary" />}
+        {currentTheme === "ruins" && <Castle className="w-5 h-5 text-primary" />}
+        {currentTheme === "city" && <Building2 className="w-5 h-5 text-primary" />}
+      </button>
+
+      {isOpen && (
+        <Card className="absolute top-16 right-0 bg-white/90 backdrop-blur-md rounded-2xl p-3 shadow-xl border border-white/40 min-w-[140px] animate-fade-in">
+          <div className="flex flex-col gap-2">
+            {themes.map(({ value, label, icon: Icon }) => (
+              <button
+                key={value}
+                onClick={() => {
+                  onThemeChange(value);
+                  setIsOpen(false);
+                }}
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all ${
+                  currentTheme === value
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "hover:bg-primary/10 text-foreground"
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                <span className="text-sm font-medium">{label}</span>
+              </button>
+            ))}
+          </div>
+        </Card>
+      )}
+    </div>
   );
 };
 
@@ -104,31 +108,3 @@ export const getThemeStyles = (theme: ThemeType, timeMode: TimeMode) => {
   return themes[theme][timeMode];
 };
 
-export const getThemeSound = (theme: ThemeType, timeMode: TimeMode = "day") => {
-  // Ambient sounds for each theme and time of day
-  // Using high-quality audio from Pixabay (verified working)
-  const sounds: Record<ThemeType, Record<TimeMode, string>> = {
-    forest: {
-      day: "https://cdn.pixabay.com/download/audio/2022/03/10/audio_1ac5d4c9f1.mp3", // Forest daytime with birds
-      night:
-        "https://cdn.pixabay.com/download/audio/2022/05/09/audio_4e8e6faf87.mp3", // Forest night with crickets
-    },
-    beach: {
-      day: "https://cdn.pixabay.com/download/audio/2022/03/07/audio_8bdcb53d08.mp3", // Beach waves during day
-      night:
-        "https://cdn.pixabay.com/download/audio/2023/07/06/audio_6c6fa88ba9.mp3", // Beach waves at night
-    },
-    ruins: {
-      day: "https://cdn.pixabay.com/download/audio/2022/04/01/audio_eb5b1088f1.mp3", // Ruins wind daytime
-      night:
-        "https://cdn.pixabay.com/download/audio/2023/02/13/audio_a3c3f1f977.mp3", // Ruins wind nighttime
-    },
-    city: {
-      day: "https://cdn.pixabay.com/download/audio/2022/03/09/audio_0e3b26f626.mp3", // City traffic daytime
-      night:
-        "https://cdn.pixabay.com/download/audio/2023/06/21/audio_85d4bb7236.mp3", // City rain nighttime
-    },
-  };
-
-  return sounds[theme][timeMode];
-};
