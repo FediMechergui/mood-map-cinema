@@ -13,6 +13,12 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        forest: ['Playfair Display', 'serif'],
+        beach: ['Quicksand', 'sans-serif'],
+        ruins: ['Cinzel', 'serif'],
+        city: ['Orbitron', 'sans-serif'],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",

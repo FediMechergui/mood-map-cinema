@@ -6,10 +6,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { MovieCard } from "@/components/MovieCard";
 import { FloatingLeaves } from "@/components/FloatingLeaves";
-import { ThemeSelector, getThemeStyles, ThemeType, TimeMode } from "@/components/ThemeSelector";
+import { ThemeSelector, getThemeStyles, getThemeMood, ThemeType, TimeMode } from "@/components/ThemeSelector";
 import { Loader2, MapPin, CloudRain, Clock, Sparkles } from "lucide-react";
 import { toast } from "sonner";
-import logo from "@/assets/logo.png";
 
 interface Movie {
   Title: string;
@@ -115,7 +114,13 @@ const Index = () => {
     setMovies([]);
 
     try {
-      const searchTerms = getMoodBasedSearchTerms(mood, genres, weather?.description);
+      const searchTerms = getMoodBasedSearchTerms(
+        mood,
+        genres,
+        weather?.description,
+        backgroundTheme,
+        timeMode
+      );
       const moviePromises = searchTerms.map((term) =>
         fetch(`https://www.omdbapi.com/?apikey=dafdd708&s=${term}&type=movie`)
           .then((res) => res.json())
@@ -249,16 +254,18 @@ const Index = () => {
   const getMoodBasedSearchTerms = (
     mood: string,
     genres: string[],
-    weather?: string
+    weather?: string,
+    theme?: ThemeType,
+    timeOfDay?: TimeMode
   ) => {
     const moodKeywords: Record<string, string[]> = {
-      Happy: ["comedy", "adventure", "musical", "feel-good"],
-      Sad: ["drama", "emotional", "meaningful", "touching"],
-      Adventurous: ["adventure", "action", "exploration", "journey"],
-      Romantic: ["romance", "love", "relationship", "romantic"],
-      Thoughtful: ["drama", "philosophical", "mystery", "indie"],
-      Energetic: ["action", "thriller", "fast-paced", "exciting"],
-      Relaxed: ["calm", "peaceful", "slow-burn", "contemplative"],
+      Happy: ["comedy", "adventure", "musical", "feel-good", "uplifting"],
+      Sad: ["drama", "emotional", "meaningful", "touching", "melancholic"],
+      Adventurous: ["adventure", "action", "exploration", "journey", "quest"],
+      Romantic: ["romance", "love", "relationship", "romantic", "heartfelt"],
+      Thoughtful: ["drama", "philosophical", "mystery", "indie", "introspective"],
+      Energetic: ["action", "thriller", "fast-paced", "exciting", "intense"],
+      Relaxed: ["calm", "peaceful", "slow-burn", "contemplative", "meditative"],
     };
 
     const weatherKeywords: Record<string, string> = {
@@ -270,6 +277,19 @@ const Index = () => {
 
     const baseTerms = [...(moodKeywords[mood] || []), ...genres.slice(0, 2)];
 
+    // Add theme-based psychological mood
+    if (theme) {
+      const themeMoods = getThemeMood(theme);
+      baseTerms.push(...themeMoods.slice(0, 2));
+    }
+
+    // Add time-based mood
+    if (timeOfDay === "night") {
+      baseTerms.push("dark", "mysterious");
+    } else {
+      baseTerms.push("bright", "vibrant");
+    }
+
     if (weather) {
       const weatherTerm = Object.keys(weatherKeywords).find((key) =>
         weather.includes(key)
@@ -277,7 +297,7 @@ const Index = () => {
       if (weatherTerm) baseTerms.push(weatherKeywords[weatherTerm]);
     }
 
-    return baseTerms.slice(0, 6);
+    return baseTerms.slice(0, 8);
   };
 
   const getTimeOfDay = () => {
@@ -308,16 +328,16 @@ const Index = () => {
 
       <div className="container mx-auto px-4 py-8 relative z-10">
         {/* Header */}
-        <header className="text-center mb-8 md:mb-12 animate-fade-in px-4">
+        <header className={`text-center mb-8 md:mb-12 animate-fade-in px-4 transition-all duration-700 ${themeStyles.font}`}>
           <img
-            src={logo}
+            src={themeStyles.logo}
             alt="Marwa's Mood Movies Cave"
-            className="w-32 md:w-48 lg:w-64 mx-auto mb-4 md:mb-6"
+            className="w-48 md:w-64 lg:w-80 mx-auto mb-4 md:mb-6 drop-shadow-2xl transition-all duration-700"
           />
-          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-3 md:mb-4 tracking-tight">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-3 md:mb-4 tracking-tight drop-shadow-lg">
             Marwa's Mood Movies Cave
           </h1>
-          <p className="text-base md:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+          <p className="text-base md:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed drop-shadow-md">
             Discover your perfect movie match based on your mood, the weather, and your vibe
           </p>
         </header>
@@ -438,16 +458,18 @@ const Index = () => {
                 />
 
                 {lastWatchedSuggestions.length > 0 && (
-                  <div className="absolute z-[100] mt-2 w-full rounded-xl bg-white backdrop-blur-md shadow-xl border border-white/40 max-h-64 overflow-auto">
+                  <div className="absolute z-[100] mt-1 w-full rounded-xl bg-white/98 backdrop-blur-xl shadow-2xl border-2 border-primary/20 max-h-80 overflow-y-auto">
                     {lastWatchedSuggestions.slice(0, 5).map((s, idx) => (
                       <button
                         key={`${s.Title}-${idx}`}
+                        type="button"
                         onMouseDown={(e) => {
                           e.preventDefault();
+                          e.stopPropagation();
                           applySuggestion(s.Title, "last");
                         }}
-                        className={`w-full text-left px-4 py-3 hover:bg-primary/10 transition-colors border-b border-border/10 last:border-0 ${
-                          activeSuggestionIndex === idx ? "bg-primary/10" : ""
+                        className={`w-full text-left px-4 py-3 hover:bg-primary/15 transition-all border-b border-primary/10 last:border-0 ${
+                          activeSuggestionIndex === idx ? "bg-primary/15 scale-[0.99]" : ""
                         }`}
                         onMouseEnter={() => setActiveSuggestionIndex(idx)}
                       >
@@ -456,12 +478,12 @@ const Index = () => {
                             <img
                               src={s.Poster}
                               alt={s.Title}
-                              className="w-10 h-14 object-cover rounded"
+                              className="w-12 h-16 object-cover rounded-md shadow-md"
                             />
                           )}
-                          <div>
-                            <div className="font-semibold text-sm text-foreground">{s.Title}</div>
-                            <div className="text-xs text-muted-foreground">{s.Year}</div>
+                          <div className="flex-1">
+                            <div className="font-semibold text-sm text-foreground line-clamp-1">{s.Title}</div>
+                            <div className="text-xs text-muted-foreground mt-0.5">{s.Year}</div>
                           </div>
                         </div>
                       </button>
@@ -515,16 +537,18 @@ const Index = () => {
                 />
 
                 {favoriteSuggestions.length > 0 && (
-                  <div className="absolute z-[100] mt-2 w-full rounded-xl bg-white backdrop-blur-md shadow-xl border border-white/40 max-h-64 overflow-auto">
+                  <div className="absolute z-[100] mt-1 w-full rounded-xl bg-white/98 backdrop-blur-xl shadow-2xl border-2 border-primary/20 max-h-80 overflow-y-auto">
                     {favoriteSuggestions.slice(0, 5).map((s, idx) => (
                       <button
                         key={`${s.Title}-${idx}`}
+                        type="button"
                         onMouseDown={(e) => {
                           e.preventDefault();
+                          e.stopPropagation();
                           applySuggestion(s.Title, "fav");
                         }}
-                        className={`w-full text-left px-4 py-3 hover:bg-primary/10 transition-colors border-b border-border/10 last:border-0 ${
-                          activeSuggestionIndex === idx ? "bg-primary/10" : ""
+                        className={`w-full text-left px-4 py-3 hover:bg-primary/15 transition-all border-b border-primary/10 last:border-0 ${
+                          activeSuggestionIndex === idx ? "bg-primary/15 scale-[0.99]" : ""
                         }`}
                         onMouseEnter={() => setActiveSuggestionIndex(idx)}
                       >
@@ -533,12 +557,12 @@ const Index = () => {
                             <img
                               src={s.Poster}
                               alt={s.Title}
-                              className="w-10 h-14 object-cover rounded"
+                              className="w-12 h-16 object-cover rounded-md shadow-md"
                             />
                           )}
-                          <div>
-                            <div className="font-semibold text-sm text-foreground">{s.Title}</div>
-                            <div className="text-xs text-muted-foreground">{s.Year}</div>
+                          <div className="flex-1">
+                            <div className="font-semibold text-sm text-foreground line-clamp-1">{s.Title}</div>
+                            <div className="text-xs text-muted-foreground mt-0.5">{s.Year}</div>
                           </div>
                         </div>
                       </button>

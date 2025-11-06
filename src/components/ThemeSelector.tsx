@@ -1,6 +1,5 @@
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Palmtree, Trees, Castle, Building2, Sun, Moon } from "lucide-react";
+import { useState } from "react";
+import { Palmtree, Trees, Castle, Building2 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import forestDay from "@/assets/forest-day.jpg";
 import forestNight from "@/assets/forest-night.jpg";
@@ -10,6 +9,10 @@ import ruinsDay from "@/assets/ruins-day.jpg";
 import ruinsNight from "@/assets/ruins-night.jpg";
 import cityDay from "@/assets/city-day.jpg";
 import cityNight from "@/assets/city-night.jpg";
+import logoForest from "@/assets/logo-forest.png";
+import logoBeach from "@/assets/logo-beach.png";
+import logoRuins from "@/assets/logo-ruins.png";
+import logoCity from "@/assets/logo-city.png";
 
 export type ThemeType = "forest" | "beach" | "ruins" | "city";
 export type TimeMode = "day" | "night";
@@ -72,39 +75,33 @@ export const ThemeSelector = ({ currentTheme, onThemeChange, timeMode }: ThemeSe
 export const getThemeStyles = (theme: ThemeType, timeMode: TimeMode) => {
   const themes = {
     forest: {
-      day: {
-        backgroundImage: forestDay,
-      },
-      night: {
-        backgroundImage: forestNight,
-      },
+      day: { backgroundImage: forestDay, logo: logoForest, font: "font-forest" },
+      night: { backgroundImage: forestNight, logo: logoForest, font: "font-forest" },
     },
     beach: {
-      day: {
-        backgroundImage: beachDay,
-      },
-      night: {
-        backgroundImage: beachNight,
-      },
+      day: { backgroundImage: beachDay, logo: logoBeach, font: "font-beach" },
+      night: { backgroundImage: beachNight, logo: logoBeach, font: "font-beach" },
     },
     ruins: {
-      day: {
-        backgroundImage: ruinsDay,
-      },
-      night: {
-        backgroundImage: ruinsNight,
-      },
+      day: { backgroundImage: ruinsDay, logo: logoRuins, font: "font-ruins" },
+      night: { backgroundImage: ruinsNight, logo: logoRuins, font: "font-ruins" },
     },
     city: {
-      day: {
-        backgroundImage: cityDay,
-      },
-      night: {
-        backgroundImage: cityNight,
-      },
+      day: { backgroundImage: cityDay, logo: logoCity, font: "font-city" },
+      night: { backgroundImage: cityNight, logo: logoCity, font: "font-city" },
     },
   };
 
   return themes[theme][timeMode];
+};
+
+export const getThemeMood = (theme: ThemeType): string[] => {
+  const themeMoods: Record<ThemeType, string[]> = {
+    forest: ["peaceful", "natural", "contemplative", "serene", "organic"],
+    beach: ["relaxed", "carefree", "breezy", "vacation", "light"],
+    ruins: ["mysterious", "ancient", "thoughtful", "epic", "historical"],
+    city: ["energetic", "modern", "fast-paced", "urban", "vibrant"],
+  };
+  return themeMoods[theme];
 };
 
