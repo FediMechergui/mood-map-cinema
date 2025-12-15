@@ -335,7 +335,7 @@ const Index = () => {
             className="w-48 md:w-64 lg:w-80 mx-auto mb-4 md:mb-6 drop-shadow-2xl transition-all duration-700"
           />
           <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-3 md:mb-4 tracking-tight drop-shadow-lg">
-            Marwa's Mood Movies Cave
+            Mood Movies Cave
           </h1>
           <p className="text-base md:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed drop-shadow-md">
             Discover your perfect movie match based on your mood, the weather, and your vibe
